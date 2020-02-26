@@ -1730,6 +1730,7 @@ _objc_rootAllocWithZone(Class cls, malloc_zone_t *zone)
 static ALWAYS_INLINE id
 callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
 {
+    print_D("cls:%p,checkNil:%d,allocWithZone:%d",cls,checkNil,allocWithZone);
     if (slowpath(checkNil && !cls)) return nil;
 
 #if __OBJC2__
@@ -1765,6 +1766,7 @@ callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
 id
 _objc_rootAlloc(Class cls)
 {
+    print_D("cls:%p",cls);
     return callAlloc(cls, false/*checkNil*/, true/*allocWithZone*/);
 }
 
@@ -1772,6 +1774,7 @@ _objc_rootAlloc(Class cls)
 id
 objc_alloc(Class cls)
 {
+    print_D("cls:%p",cls);
     return callAlloc(cls, true/*checkNil*/, false/*allocWithZone*/);
 }
 
@@ -1779,6 +1782,7 @@ objc_alloc(Class cls)
 id 
 objc_allocWithZone(Class cls)
 {
+    print_D("cls:%p",cls);
     return callAlloc(cls, true/*checkNil*/, true/*allocWithZone*/);
 }
 
@@ -2292,6 +2296,7 @@ void arr_init(void)
 }
 
 + (id)alloc {
+//    FHLog(@"self:%@",self);
     return _objc_rootAlloc(self);
 }
 
