@@ -1731,32 +1731,51 @@ static ALWAYS_INLINE id
 callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
 {
     print_D("cls:%p,checkNil:%d,allocWithZone:%d",cls,checkNil,allocWithZone);
-    if (slowpath(checkNil && !cls)) return nil;
+    if (slowpath(checkNil && !cls)) {
+        print_D("cls:%p,checkNil:%d,allocWithZone:%d,return nil",cls,checkNil,allocWithZone);
+        return nil;
+    };
 
 #if __OBJC2__
     if (fastpath(!cls->ISA()->hasCustomAWZ())) {
+        print_D("cls:%p,!cls->ISA()->hasCustomAWZ()) is true",cls);
         // No alloc/allocWithZone implementation. Go straight to the allocator.
         // fixme store hasCustomAWZ in the non-meta class and 
         // add it to canAllocFast's summary
         if (fastpath(cls->canAllocFast())) {
+            print_D("cls:%p,cls->canAllocFast()) is true",cls);
             // No ctors, raw isa, etc. Go straight to the metal.
             bool dtor = cls->hasCxxDtor();
+            print_D("cls:%p,cls->canAllocFast()) is true,call calloc(1, cls->bits.fastInstanceSize());",cls);
             id obj = (id)calloc(1, cls->bits.fastInstanceSize());
-            if (slowpath(!obj)) return callBadAllocHandler(cls);
+            if (slowpath(!obj)) {
+                print_D("cls:%p,obj is null,call callBadAllocHandler(cls)",cls);
+                return callBadAllocHandler(cls);
+            };
+            print_D("cls:%p,obj is not nill,call obj->initInstanceIsa(cls, dtor),then return obj",cls);
             obj->initInstanceIsa(cls, dtor);
             return obj;
         }
         else {
             // Has ctor or raw isa or something. Use the slower path.
+            print_D("cls:%p,cls->canAllocFast() is false,call class_createInstance(cls, 0)",cls);
             id obj = class_createInstance(cls, 0);
-            if (slowpath(!obj)) return callBadAllocHandler(cls);
+            if (slowpath(!obj)) {
+                print_D("cls:%p,cls->canAllocFast() is false,obj is null,call callBadAllocHandler(cls)",cls);
+                return callBadAllocHandler(cls);
+            }
+            print_D("cls:%p,cls->canAllocFast() is false,obj is not null,return obj",cls);
             return obj;
         }
     }
 #endif
 
     // No shortcuts available.
-    if (allocWithZone) return [cls allocWithZone:nil];
+    if (allocWithZone) {
+        print_D("cls:%p,allocWithZone is true,call [cls allocWithZone:nil]",cls);
+        return [cls allocWithZone:nil];
+    }
+    print_D("cls:%p,allocWithZone is false,call [cls alloc]",cls);
     return [cls alloc];
 }
 
@@ -2296,7 +2315,7 @@ void arr_init(void)
 }
 
 + (id)alloc {
-//    FHLog(@"self:%@",self);
+    print_D("self:%p",self);
     return _objc_rootAlloc(self);
 }
 

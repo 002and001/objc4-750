@@ -6515,25 +6515,31 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
     bool hasCxxDtor = cls->hasCxxDtor();
     bool fast = cls->canAllocNonpointer();
 
+    // 1.根据extraBytes计算对象的内存空间大小
     size_t size = cls->instanceSize(extraBytes);
     if (outAllocatedSize) *outAllocatedSize = size;
 
     id obj;
     if (!zone  &&  fast) {
+        // 2.根据计算的size为obj申请分配内存
         obj = (id)calloc(1, size);
         if (!obj) return nil;
+        print_D("cls:%p,obj:%p",cls,obj);
+        // 3.初始化对象的isa指针,obj->initInstanceIsa(cls, hasCxxDtor)<==>initIsa(cls, true, hasCxxDtor);
         obj->initInstanceIsa(cls, hasCxxDtor);
     } 
     else {
         if (zone) {
             obj = (id)malloc_zone_calloc ((malloc_zone_t *)zone, 1, size);
         } else {
+            // 2.根据计算的size为obj申请分配内存
             obj = (id)calloc(1, size);
         }
         if (!obj) return nil;
 
         // Use raw pointer isa on the assumption that they might be 
         // doing something weird with the zone or RR.
+        // 3.初始化对象的isa指针,initIsa(cls)==>initIsa(cls, true, hasCxxDtor)
         obj->initIsa(cls);
     }
 
@@ -6548,6 +6554,7 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
 id 
 class_createInstance(Class cls, size_t extraBytes)
 {
+    print_D("cls:%p",cls);
     return _class_createInstanceFromZone(cls, extraBytes, nil);
 }
 
